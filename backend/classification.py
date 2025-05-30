@@ -8,6 +8,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from .database import collection
 from typing import Dict, Union, Optional
+import re
 
 # Load environment variables from .env file
 load_dotenv()
@@ -53,15 +54,32 @@ def classify_invoice(invoice_json: dict, model) -> str:
     """
     # print("Classifying invoice...")
     # First, check the net_amount condition directly in Python
-    try:
-        grand_total = invoice_json.get("payment_details", {}).get("grand_total")
-        if grand_total is not None and grand_total < 2000:
-            print("Net amount is less than 2000, classifying as 'outgoing_payment'")
-            return "outgoing_payment"
-    except (TypeError, ValueError):
-        # Handle cases where net_amount is not a valid number
-        pass
+    # try:
+    #     grand_total = invoice_json.get("payment_details", {}).get("grand_total")
+    #     if grand_total is not None and grand_total < 2000:
+    #         print("Net amount is less than 2000, classifying as 'outgoing_payment'")
+    #         return "outgoing_payment"
+    # except (TypeError, ValueError):
+    #     # Handle cases where net_amount is not a valid number
+    #     pass
 
+    try:
+        total_amount = invoice_json.get("payment_details", {}).get("grand_total")
+
+        if total_amount is not None:
+            try:
+                cleaned_amount_str = re.sub(r'[^0-9.]', '', str(total_amount))
+                total_amount_float = float(cleaned_amount_str)
+
+                if total_amount_float < 2000:
+                    print("Grand total is less than 2000, classifying as 'outgoing_payment'")
+                    return "outgoing_payment"
+            except (ValueError, TypeError) as num_err:
+                    print(f"Could not convert grand_total to number: {total_amount} - {num_err}")
+                    # Continue to model classification if number conversion fails
+    except Exception as e:
+        # Catch any unexpected errors during the initial check
+        print(f"Error during grand_total check: {e}")
     # If the net_amount condition is not met, use the model for classification
     prompt = ChatPromptTemplate.from_messages([
         ("system", """You are a document classifier for SAP systems. Based on the invoice JSON data, classify the document into one of the following types:
