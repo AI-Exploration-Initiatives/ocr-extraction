@@ -1,7 +1,7 @@
 steps:
-# Build the container image with platform flag
+# Build the container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--platform=linux/amd64', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA', '.']
+  args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA', '.']
 
 # Push the container image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
@@ -22,7 +22,7 @@ steps:
     - 'managed'
     - '--allow-unauthenticated'
     - '--set-env-vars'
-    - 'MONGODB_URI=${_MONGODB_URI},MISTRAL_API_KEY=${_MISTRAL_API_KEY}'
+    - 'MONGODB_URI=${_MONGODB_URI},MISTRAL_API_KEY=${_MISTRAL_API_KEY},GOOGLE_API_KEY=${_GOOGLE_API_KEY}'
     - '--memory'
     - '512Mi'
     - '--cpu'
@@ -51,6 +51,7 @@ timeout: '1800s'
 substitutions:
   _MONGODB_URI: ''
   _MISTRAL_API_KEY: ''
+  _GOOGLE_API_KEY: ''
   _REGION: 'asia-south1'
   _REPOSITORY: 'ocr-extraction'
 
