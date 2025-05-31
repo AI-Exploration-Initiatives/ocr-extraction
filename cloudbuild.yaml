@@ -1,11 +1,11 @@
 steps:
 # Build the container image
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:$COMMIT_SHA', '.']
+  args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA', '.']
 
 # Push the container image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:$COMMIT_SHA']
+  args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA']
 
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -13,11 +13,11 @@ steps:
   args:
   - 'run'
   - 'deploy'
-  - 'ocr-deployed'
+  - 'ocr-deployed'  # Changed to match your service name
   - '--image'
-  - 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:$COMMIT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA'
   - '--region'
-  - 'asia-south1'
+  - '${_REGION}'
   - '--platform'
   - 'managed'
   - '--allow-unauthenticated'
@@ -36,15 +36,15 @@ steps:
 
 # Tag the image with 'latest' for easier reference
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['tag', 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:$COMMIT_SHA', 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:latest']
+  args: ['tag', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest']
 
 # Push the 'latest' tag
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:latest']
+  args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest']
 
 images:
-- 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:$COMMIT_SHA'
-- 'asia-south1-docker.pkg.dev/shiv-automation/ocr-extraction/ocr-deployed:latest'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest'
 
 timeout: '1800s'  # 30 minutes timeout
 
@@ -53,7 +53,7 @@ substitutions:
   _MONGODB_URI: ''  # This will be set in the Cloud Build trigger
   _MISTRAL_API_KEY: ''  # This will be set in the Cloud Build trigger
   _REGION: 'asia-south1'  # Mumbai region
-  _REPOSITORY: 'ocr-deployed'  # Your Artifact Registry repository name
+  _REPOSITORY: 'ocr-extraction'  # Your Artifact Registry repository name
 
 # Define available options
 options:
