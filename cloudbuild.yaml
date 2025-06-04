@@ -56,5 +56,6 @@ substitutions:
   _REPOSITORY: 'ocr-extraction'
   _HF_API_KEY: ''
 
+
 options:
   logging: CLOUD_LOGGING_ONLY
