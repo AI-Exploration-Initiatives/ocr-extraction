@@ -38,6 +38,7 @@ MarkupSafe==3.0.2
 mistralai==1.7.0
 orjson==3.10.18
 packaging==24.2
+pandas==2.2.3
 proto-plus==1.26.1
 protobuf==5.29.4
 pyasn1==0.6.1

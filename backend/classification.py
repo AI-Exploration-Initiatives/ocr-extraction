@@ -9,6 +9,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from .database import collection
 from typing import Dict, Union, Optional
 import re
+import requests
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
@@ -52,17 +54,6 @@ def classify_invoice(invoice_json: dict, model) -> str:
     Classifies an invoice based on its content using a Gemini model.
     Also checks for a specific net_amount condition.
     """
-    # print("Classifying invoice...")
-    # First, check the net_amount condition directly in Python
-    # try:
-    #     grand_total = invoice_json.get("payment_details", {}).get("grand_total")
-    #     if grand_total is not None and grand_total < 2000:
-    #         print("Net amount is less than 2000, classifying as 'outgoing_payment'")
-    #         return "outgoing_payment"
-    # except (TypeError, ValueError):
-    #     # Handle cases where net_amount is not a valid number
-    #     pass
-
     try:
         total_amount = invoice_json.get("payment_details", {}).get("grand_total")
 
@@ -119,6 +110,64 @@ if invoice_data_dict:
     classification_result = classify_invoice(invoice_data_dict, model)
     # print("\n📄 Document Type:", classification_result)
 
+def match_vendor_name(document_id: int):
+    try:
+        API_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/sentence-similarity"
+        access_token = os.getenv("HF_API_KEY")
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        df = pd.read_csv("./backend/assets/sap_fields.csv")
+        sap_fields = df.values.tolist()
+
+        def query(payload):
+            response = requests.post(API_URL, headers=headers, json=payload)
+            return response.json()
+        
+        document = collection.find_one({"uid": document_id}, {"extracted_details": 1, "_id": 0})
+        vendor_name = document.get("extracted_details", {}).get("vendor_details", {}).get("name")
+        print(f"\nOriginal vendor name: {vendor_name}")       
+        vendor_name_list = [list[0] for list in sap_fields]
+
+        output = query({
+            "inputs": {
+                "source_sentence": vendor_name,
+                "sentences": vendor_name_list
+            }
+        })
+
+        if output and isinstance(output, list):
+            scores = output[0] if isinstance(output[0], list) else output
+            
+            if not isinstance(scores, list):
+                print(f"Unexpected scores format: {type(scores)}")
+                return
+
+            highest_score = max(scores)
+            best_index = scores.index(highest_score)
+            
+            best_match = vendor_name_list[best_index]
+            
+            print(f"\nBest match found:")
+            print(f"Vendor name: {best_match}")
+            print(f"Similarity score: {highest_score:.2%}")
+            print(f"Index in list: {best_index}")
+
+            collection.update_one(
+                {"uid": document_id},
+                {"$set": {"extracted_details.vendor_details.name": best_match}}
+            )
+            print(f"\nUpdated vendor name to: {best_match}")
+        else:
+            print(f"Invalid API response format: {type(output)}")
+            print(f"Response content: {output}")
+
+    except Exception as e:
+        print(f"An unexpected error occurred during vendor name matching for document ID {document_id}: {e}")
+        print(f"Error type: {type(e)}")
+        return f"An internal error occurred: {str(e)}"
+
+
 def process_classification(document_id: int):
     """Fetches document by ID and processes classification based on extracted details."""
     print(f"Attempting to process classification for document ID: {document_id}")
@@ -162,6 +211,13 @@ def process_classification(document_id: int):
         # Classify the invoice
         classification_result = classify_invoice(invoice_data_dict, model)
 
+        if classification_result == 'ap_invoice':
+            gl_classified = gl_account_classifier(document_id)
+            collection.update_one({"uid": document_id}, {"$set":  {"gl_classification": gl_classified}})
+
+        else: 
+            print("Not a ap_invoice")
+
         # print(f"Classification complete for document ID {document_id}. Result: {classification_result}")
         return classification_result
 
@@ -169,4 +225,180 @@ def process_classification(document_id: int):
         print(f"An unexpected error occurred during classification for document ID {document_id}: {e}")
         return f"An internal error occurred: {str(e)}"
 
+def gl_account_classifier(document_id:id):
+    document = collection.find_one({"uid": document_id}, {"extracted_details": 1, "_id": 0})
+    raw_vendor_extracted_details = document.get("extracted_details", {})
+    vendor_extracted_details = json.dumps(raw_vendor_extracted_details)
+    
+    invoice_json_data = vendor_extracted_details
+    gl_mapping_json_data = """
+        {
+        "Advertisement Expenses": [
+            "Sales-KTV ( 5 sec Headline break all news Sarbottam steelTVC cost of KrV dated Magh 1-30 2081 ) (As per RO)",
+            "Toward the Cost of Facebook Page Management",
+            "Advertisement tax and service",
+            "Radio Advertising",
+            "Volume Branding"
+        ],
+        "CARGO FEE": [
+            "Consignment Note",
+            "DHL Express or any cargo company",
+            "Cargo and Courier"
+        ],
+        "Cleaning Expenses": [
+            "Harpic Dettol Lizol Exo Odonil (bhatbhateni)"
+        ],
+        "Electricity Expenses": [
+            "related to energy companies (electricit charges of a certain month in line item)"
+        ],
+        "FURNITURE & FIXTURE": [
+            "items related with furniture decor interiors"
+        ],
+        "INSURANCE": [
+            "related to insurance companyt and vehicle insurance"
+        ],
+        "IT & ACCESSORIES": [
+            "Laptop, Keyboard, Mouse any accessory supply"
+        ],
+        "IT Expenses": [
+            "Fortinet Fortigate 80F Unified Threat Protection",
+            "Sales Order ERP Web Software development",
+            "SAP Business One (bizhub)"
+        ],
+        "PLANT & MACHENERY": [
+            "related to equipment used in a business to carry out operation"
+        ],
+        "PRINTING AND STATIONARY": [
+            "related to books and stationary suppliers",
+            "Crayons Corp Pvt. Ltd. (company Name)"
+        ],
+        "Rep Maint Exp-Pool A ": [
+            "related to building, structure and similar works of permanent nature",
+            "Auto or Repairing Workshop"
+        ],
+        "Repair and Maintainance Admin -Pool B": [
+            "Electronics related repair and maintenance",
+            "computers, data processing equipments, furiture, fixture and office equpments"
+        ],
+        "Telephones Expenses": [
+            "SMS and call related invoice"
+        ],
+        "Travelling Expenses-Directors": [
+            "related to hotel room expenses ",
+            "Hotel names on vendor names",
+            "(customer name: Atul Neupane)"
+        ],
+        "Travelling Expenses-Staffs": [
+            "related to hotel room expenses ",
+            "Hotel names on vendor names",
+            "(customer name: Sabina, Mahesh)"
+        ],
+        "Travelling Expenses-Others": [
+            "related to hotel room expenses",
+            "Hotel names on vendor names",
+            "(customer name: Sarbottam)"
+        ],
+        "Rep Maint Exp-Pool C": [
+            "automobile, bus and minibus"
+        ],
+        "Repair and Maintainance Admin -Pool D": [
+            "Construction and earth moving equipments, unabsorbed pollution control cost and any tangible assets not included in above blocks"
+        ],
+        "Rep Maint Exp-Pool E": [
+            "Intangible assets (patents, copyrights, trade marks, software etc (cost+life down to which are not included in block D assets)"
+        ],
+        "SCRAP": [
+           "Related to iron scraps or metal scraps",
+           "Iron Scrap or Sponge Iron"
+        ]
+        }
+    """
+    invoice_data = json.loads(invoice_json_data)
+    line_items = invoice_data["line_items"]
+    vendor_name = invoice_data["vendor_details"]["name"]
+    invoice_description = f"Invoice from vendor {vendor_name}"
 
+    gl_mapping = json.loads(gl_mapping_json_data)
+
+    # setup LangChain model
+    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest")
+
+    # define system + user prompt
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """You are an AI assistant that helps classify invoice line items for SAP G/L accounts.
+        You will be provided with invoice details, a line item description, and a mapping of example descriptions to G/L accounts.
+        Prioritize suggesting a G/L account from the provided mapping if the line item description is similar to any of the examples.
+        If no similar example is found in the mapping, analyze the 'products' description, vendor name, and overall invoice description to suggest a relevant G/L account based on common accounting practices.
+        Refer to the provided mapping of example descriptions to G/L accounts when making your suggestions.
+        """),
+
+        ("user", """Invoice Details:
+        Vendor Name: {vendor_name}
+        Invoice Description: {invoice_description}
+        Line Item Products: {products}
+
+        G/L Account Mapping:
+        {gl_mapping_text}
+
+        Classify this line item and suggest a G/L account from the mapping if applicable, otherwise suggest the most relevant G/L account.
+        """)
+    ])
+
+    # for Langchain chain
+    chain = prompt | model
+
+    # to find G/L account from mapping
+    def get_gl_from_mapping(products, mapping):
+        for gl_account, descriptions in mapping.items():
+            for desc in descriptions:
+                if desc.lower() in products.lower():
+                    return gl_account
+        return None
+
+    classified_items = []
+    for item in line_items:
+        products = item.get("products")
+
+        if products:
+            # direct mapping first
+            suggested_gl_account_raw = get_gl_from_mapping(products, gl_mapping)
+
+            if suggested_gl_account_raw:
+                #  a match is found in the mapping, use it
+                item["suggested_gl_account"] = suggested_gl_account_raw
+                item["classification_source"] = "mapping"
+                classified_items.append(item)
+            else:
+                # no match in mapping, Langchain for suggestion
+                try:
+                    response = chain.invoke({
+                        "products": products,
+                        "vendor_name": vendor_name,
+                        "invoice_description": invoice_description,
+                        "gl_mapping_text": json.dumps(gl_mapping, indent=2)
+                    })
+                    suggested_gl_account_model = response.content.strip()
+                    # Further process the string to extract the actual GL account name from the model's response
+                    extracted_name = suggested_gl_account_model
+                    if "**" in extracted_name:
+                        extracted_name = extracted_name.split("**")[-2].strip() # Get the text between the last two **
+                    else:
+                        # Fallback if the format changes
+                        extracted_name = extracted_name.split(".")[-1].strip()
+
+                    item["suggested_gl_account"] = extracted_name
+                    classified_items.append(item)
+
+                except Exception as e:
+                    # to catch any exception during invoke and print details
+                    print(f"Error during Langchain invocation for products: {products}")
+                    print(f"Error type: {type(e).__name__}")
+                    print(f"Error message: {e}")
+                    item["suggested_gl_account"] = f"Classification failed: {type(e).__name__}"
+                    item["classification_source"] = "error"
+                    classified_items.append(item)
+        else:
+            item["suggested_gl_account"] = "OTHER"
+            item["classification_source"] = "no products"
+            classified_items.append(item)
+    return classified_items[0]['suggested_gl_account']

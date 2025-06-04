@@ -22,7 +22,7 @@ steps:
     - 'managed'
     - '--allow-unauthenticated'
     - '--set-env-vars'
-    - 'MONGODB_URI=${_MONGODB_URI},MISTRAL_API_KEY=${_MISTRAL_API_KEY},GOOGLE_API_KEY=${_GOOGLE_API_KEY}'
+    - 'MONGODB_URI=${_MONGODB_URI},MISTRAL_API_KEY=${_MISTRAL_API_KEY},GOOGLE_API_KEY=${_GOOGLE_API_KEY},HF_API_KEY=${_HF_API_KEY}'
     - '--memory'
     - '512Mi'
     - '--cpu'
@@ -54,6 +54,8 @@ substitutions:
   _GOOGLE_API_KEY: ''
   _REGION: 'asia-south1'
   _REPOSITORY: 'ocr-extraction'
+  _HF_API_KEY: ''
+
 
 options:
   logging: CLOUD_LOGGING_ONLY

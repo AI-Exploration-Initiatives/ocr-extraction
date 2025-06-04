@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, Form, UploadFile, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from backend.ocr_processor import process_file  
-from backend.classification import parse_invoice_json, classify_invoice, get_gemini_model, raw_json_string, process_classification
+from backend.classification import parse_invoice_json, classify_invoice, get_gemini_model, raw_json_string, process_classification, match_vendor_name, gl_account_classifier
 import os
 import shutil
 from .database import collection
@@ -199,18 +199,33 @@ async def classify_document(document_id: int):
 
         classification_result = process_classification(document_id)
         print("\n📄 Document Type:", classification_result)
+        match_vendor_name(document_id)
         collection.update_one({"uid": document_id}, {"$set":  {"classification": classification_result }})
         
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "success",
-                "classification": classification_result,
-                "document_id": document_id,
-                "file_name": document_name["file_name"],
-                "extracted_details": document_name["extracted_details"]
-            }
-        )
+        if classification_result == 'ap_invoice':
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "document_id": document_id,
+                    "classification": classification_result,
+                    "gl_classification": gl_account_classifier(document_id),
+                    "file_name": document_name["file_name"],
+                    "extracted_details": document_name["extracted_details"]
+                }
+            )
+            
+        else:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "classification": classification_result,
+                    "document_id": document_id,
+                    "file_name": document_name["file_name"],
+                    "extracted_details": document_name["extracted_details"]
+                }
+            )
     except Exception as e:
         return JSONResponse(
             status_code=500,
