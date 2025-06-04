@@ -3,3 +3,7 @@
 backend/__pycache__
 __pycache__
 .venvv
+.pyc
+__pycache__/
+*.py[cod]
+
