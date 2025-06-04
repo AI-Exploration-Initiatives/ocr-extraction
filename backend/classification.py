@@ -398,7 +398,7 @@ def gl_account_classifier(document_id:id):
                     item["classification_source"] = "error"
                     classified_items.append(item)
         else:
-            item["suggested_gl_account"] = "Cannot classify"
+            item["suggested_gl_account"] = "OTHER"
             item["classification_source"] = "no products"
             classified_items.append(item)
     return classified_items[0]['suggested_gl_account']
