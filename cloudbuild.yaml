@@ -1,0 +1,60 @@
+steps:
+# Build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA', '.']
+
+# Push the container image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA']
+
+# Deploy container image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'ocr-deployed'
+    - '--image'
+    - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA'
+    - '--region'
+    - '${_REGION}'
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated'
+    - '--set-env-vars'
+    - 'MONGODB_URI=${_MONGODB_URI},MISTRAL_API_KEY=${_MISTRAL_API_KEY},GOOGLE_API_KEY=${_GOOGLE_API_KEY},HF_API_KEY=${_HF_API_KEY}'
+    - '--memory'
+    - '512Mi'
+    - '--cpu'
+    - '1'
+    - '--min-instances'
+    - '0'
+    - '--max-instances'
+    - '10'
+    - '--port'
+    - '8080'
+
+# Tag the image with 'latest' for easier reference
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest']
+
+# Push the 'latest' tag
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest']
+
+images:
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA'
+- '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest'
+
+timeout: '1800s'
+
+substitutions:
+  _MONGODB_URI: ''
+  _MISTRAL_API_KEY: ''
+  _GOOGLE_API_KEY: ''
+  _REGION: 'asia-south1'
+  _REPOSITORY: 'ocr-extraction'
+  _HF_API_KEY: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY
