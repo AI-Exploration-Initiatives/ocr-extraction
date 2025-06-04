@@ -9,6 +9,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from .database import collection
 from typing import Dict, Union, Optional
 import re
+import requests
+import pandas as pd
 
 # Load environment variables from .env file
 load_dotenv()
@@ -52,17 +54,6 @@ def classify_invoice(invoice_json: dict, model) -> str:
     Classifies an invoice based on its content using a Gemini model.
     Also checks for a specific net_amount condition.
     """
-    # print("Classifying invoice...")
-    # First, check the net_amount condition directly in Python
-    # try:
-    #     grand_total = invoice_json.get("payment_details", {}).get("grand_total")
-    #     if grand_total is not None and grand_total < 2000:
-    #         print("Net amount is less than 2000, classifying as 'outgoing_payment'")
-    #         return "outgoing_payment"
-    # except (TypeError, ValueError):
-    #     # Handle cases where net_amount is not a valid number
-    #     pass
-
     try:
         total_amount = invoice_json.get("payment_details", {}).get("grand_total")
 
@@ -118,6 +109,64 @@ if invoice_data_dict:
     model = get_gemini_model()
     classification_result = classify_invoice(invoice_data_dict, model)
     # print("\n📄 Document Type:", classification_result)
+
+def match_vendor_name(document_id: int):
+    try:
+        API_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/sentence-similarity"
+        access_token = os.getenv("HF_API_KEY")
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        df = pd.read_csv("./backend/assets/sap_fields.csv")
+        sap_fields = df.values.tolist()
+
+        def query(payload):
+            response = requests.post(API_URL, headers=headers, json=payload)
+            return response.json()
+        
+        document = collection.find_one({"uid": document_id}, {"extracted_details": 1, "_id": 0})
+        vendor_name = document.get("extracted_details", {}).get("vendor_details", {}).get("name")
+        print(f"\nOriginal vendor name: {vendor_name}")       
+        vendor_name_list = [list[0] for list in sap_fields]
+
+        output = query({
+            "inputs": {
+                "source_sentence": vendor_name,
+                "sentences": vendor_name_list
+            }
+        })
+
+        if output and isinstance(output, list):
+            scores = output[0] if isinstance(output[0], list) else output
+            
+            if not isinstance(scores, list):
+                print(f"Unexpected scores format: {type(scores)}")
+                return
+
+            highest_score = max(scores)
+            best_index = scores.index(highest_score)
+            
+            best_match = vendor_name_list[best_index]
+            
+            print(f"\nBest match found:")
+            print(f"Vendor name: {best_match}")
+            print(f"Similarity score: {highest_score:.2%}")
+            print(f"Index in list: {best_index}")
+
+            collection.update_one(
+                {"uid": document_id},
+                {"$set": {"extracted_details.vendor_details.name": best_match}}
+            )
+            print(f"\nUpdated vendor name to: {best_match}")
+        else:
+            print(f"Invalid API response format: {type(output)}")
+            print(f"Response content: {output}")
+
+    except Exception as e:
+        print(f"An unexpected error occurred during vendor name matching for document ID {document_id}: {e}")
+        print(f"Error type: {type(e)}")
+        return f"An internal error occurred: {str(e)}"
+
 
 def process_classification(document_id: int):
     """Fetches document by ID and processes classification based on extracted details."""
