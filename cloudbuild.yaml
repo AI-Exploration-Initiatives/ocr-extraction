@@ -49,7 +49,8 @@ steps:
     - -c
     - |
       apt-get update && apt-get install -y jq
-      ./notify_discord.sh
+          chmod +x ./notify_discord.sh
+          ./notify_discord.sh
   env:
     - 'DISCORD_WEBHOOK_URL=${_DISCORD_WEBHOOK_URL}'
     - 'GITHUB_TOKEN=${_GITHUB_TOKEN}'
