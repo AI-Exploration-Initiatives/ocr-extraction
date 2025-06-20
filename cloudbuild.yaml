@@ -42,6 +42,21 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest']
 
+# Notify Discord of the build and commit details
+- name: 'gcr.io/cloud-builders/curl'
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      apt-get update && apt-get install -y jq
+      ./notify_discord.sh
+  env:
+    - 'DISCORD_WEBHOOK_URL=${_DISCORD_WEBHOOK_URL}'
+    - 'GITHUB_TOKEN=${_GITHUB_TOKEN}'
+    - 'REPO_OWNER=${_REPO_OWNER}'
+    - 'REPO_NAME=${_REPO_NAME}'
+    - 'COMMIT_SHA=$COMMIT_SHA'
+
 images:
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:$COMMIT_SHA'
 - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ocr-deployed:latest'
@@ -55,7 +70,10 @@ substitutions:
   _REGION: 'asia-south1'
   _REPOSITORY: 'ocr-extraction'
   _HF_API_KEY: ''
-
+  _DISCORD_WEBHOOK_URL: ''
+  _GITHUB_TOKEN: ''
+  _REPO_OWNER: ''
+  _REPO_NAME: ''
 
 options:
   logging: CLOUD_LOGGING_ONLY
