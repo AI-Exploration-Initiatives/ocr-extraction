@@ -54,7 +54,7 @@ jobs:
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars MONGODB_URI=$MONGODB_URI,MISTRAL_API_KEY=$MISTRAL_API_KEY,GOOGLE_API_KEY=$GOOGLE_API_KEY,HF_API_KEY=$HF_API_KEY \
+            --set-env-vars "MONGODB_URI=$MONGODB_URI,MISTRAL_API_KEY=$MISTRAL_API_KEY,GOOGLE_API_KEY=$GOOGLE_API_KEY,HF_API_KEY=$HF_API_KEY" \
             --memory 512Mi \
             --cpu 1 \
             --min-instances 0 \
@@ -70,4 +70,4 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
-          COMMIT_SHA: ${{ github.sha }} 
+          COMMIT_SHA: ${{ github.sha }}
