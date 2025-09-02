@@ -1,10 +1,9 @@
 import os
-import asyncio
 import json
 from mistralai import Mistral
 from dotenv import load_dotenv
 from ..models import OCRResponse
-from ..database import collection, add_default_prompt
+from ..database import  add_default_prompt
 from ..core.config import settings
 import logging
 
