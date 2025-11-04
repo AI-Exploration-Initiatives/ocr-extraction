@@ -1,0 +1,464 @@
+[
+  {
+    "cost_center_code": "OT001",
+    "cost_center_name": "SMS ELECTRICAL",
+    "account_code": "E01020109",
+    "account_name": "Electrical Repair Melting"
+  },
+  {
+    "cost_center_code": "OT002",
+    "cost_center_name": "CCM",
+    "account_code": "E01020108",
+    "account_name": "Mechanical Repair Melting"
+  },
+  {
+    "cost_center_code": "OT003",
+    "cost_center_name": "Furnace",
+    "account_code": "E01020108",
+    "account_name": "Mechanical Repair Melting"
+  },
+  {
+    "cost_center_code": "OT004",
+    "cost_center_name": "Lab",
+    "account_code": "E01020103",
+    "account_name": "Lab Operating Exp.-Melting Unit"
+  },
+  {
+    "cost_center_code": "OT005",
+    "cost_center_name": "DG 500 KVA-I",
+    "account_code": "E01020107",
+    "account_name": "DG Fuel"
+  },
+  {
+    "cost_center_code": "OT006",
+    "cost_center_name": "DG 500 KVA-II",
+    "account_code": "E01020107",
+    "account_name": "DG Fuel"
+  },
+  {
+    "cost_center_code": "OT0062",
+    "cost_center_name": "EXCAVATOR PC-200  BA1KA 8377",
+    "account_code": "E01020105",
+    "account_name": "Scrap Expenses"
+  },
+  {
+    "cost_center_code": "OT007",
+    "cost_center_name": "Main Gate",
+    "account_code": "E020123",
+    "account_name": "Printing & Stationery"
+  },
+  {
+    "cost_center_code": "OT008",
+    "cost_center_name": "Garden & Out door area",
+    "account_code": "E020119",
+    "account_name": "Office Expenses"
+  },
+  {
+    "cost_center_code": "OT009",
+    "cost_center_name": "Office",
+    "account_code": "E020123",
+    "account_name": "Printing & Stationery"
+  },
+  {
+    "cost_center_code": "OT010",
+    "cost_center_name": "Mess-I",
+    "account_code": "E020151",
+    "account_name": "Mess Expenses"
+  },
+  {
+    "cost_center_code": "OT011",
+    "cost_center_name": "Mess-II",
+    "account_code": "E020151",
+    "account_name": "Mess Expenses"
+  },
+  {
+    "cost_center_code": "OT012",
+    "cost_center_name": "Rolling Mill MECHANICAL",
+    "account_code": "E01030106",
+    "account_name": "Mechanical Repair Rolling"
+  },
+  {
+    "cost_center_code": "OT013",
+    "cost_center_name": "TMT Lab",
+    "account_code": "E01030105",
+    "account_name": "Lab Exp Rolling"
+  },
+  {
+    "cost_center_code": "OT014",
+    "cost_center_name": "TMT Workshop",
+    "account_code": "E01030106",
+    "account_name": "Mechanical Repair Rolling"
+  },
+  {
+    "cost_center_code": "OT015",
+    "cost_center_name": "Packing & Bundling",
+    "account_code": "E01030103",
+    "account_name": "Packing & Bundling Expenses"
+  },
+  {
+    "cost_center_code": "OT016",
+    "cost_center_name": "Weigh bridge - TMT",
+    "account_code": "E020123",
+    "account_name": "Printing & Stationery"
+  },
+  {
+    "cost_center_code": "OT017",
+    "cost_center_name": "Weigh bridge - Main",
+    "account_code": "E020123",
+    "account_name": "Printing & Stationery"
+  },
+  {
+    "cost_center_code": "OT018",
+    "cost_center_name": "Staff Quarter",
+    "account_code": "E020102",
+    "account_name": "Cleaning Expenses"
+  },
+  {
+    "cost_center_code": "OT019",
+    "cost_center_name": "Labor Quarter",
+    "account_code": "E020102",
+    "account_name": "Cleaning Expenses"
+  },
+  {
+    "cost_center_code": "OT020",
+    "cost_center_name": "Exacavator,JCB1 LU1KA1101",
+    "account_code": "E01020105",
+    "account_name": "Scrap Expenses"
+  },
+  {
+    "cost_center_code": "OT021",
+    "cost_center_name": "Exacavator,JCB2 LU1KA1099",
+    "account_code": "E01020105",
+    "account_name": "Scrap Expenses"
+  },
+  {
+    "cost_center_code": "OT022",
+    "cost_center_name": "Exacavator,Kamatsu  LU1KA9393",
+    "account_code": "E01020105",
+    "account_name": "Scrap Expenses"
+  },
+  {
+    "cost_center_code": "OT023",
+    "cost_center_name": "Loader JCB Pra.02-03001-KA1675",
+    "account_code": "E01020105",
+    "account_name": "Scrap Expenses"
+  },
+  {
+    "cost_center_code": "OT024",
+    "cost_center_name": "Hydra Escort 1",
+    "account_code": "E020305",
+    "account_name": "Loading  Expenses"
+  },
+  {
+    "cost_center_code": "OT025",
+    "cost_center_name": "Hydra Escort 2",
+    "account_code": "E020305",
+    "account_name": "Loading  Expenses"
+  },
+  {
+    "cost_center_code": "OT026",
+    "cost_center_name": "Hydra Escort 3",
+    "account_code": "E020305",
+    "account_name": "Loading  Expenses"
+  },
+  {
+    "cost_center_code": "OT027",
+    "cost_center_name": "Hydra Escort 4",
+    "account_code": "E020305",
+    "account_name": "Loading  Expenses"
+  },
+  {
+    "cost_center_code": "OT028",
+    "cost_center_name": "Hydra ACE14 1048",
+    "account_code": "E020305",
+    "account_name": "Loading  Expenses"
+  },
+  {
+    "cost_center_code": "OT029",
+    "cost_center_name": "Hydra ACE14 1010",
+    "account_code": "E020305",
+    "account_name": "Loading  Expenses"
+  },
+  {
+    "cost_center_code": "OT030",
+    "cost_center_name": "Tractor Sonalika Na7TA4279",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT031",
+    "cost_center_name": "Tractor Sonalika Na7TA4280",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT033",
+    "cost_center_name": "Winger Van N2CHA 4443",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT034",
+    "cost_center_name": "Maruti Van NA6CH1715",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT035",
+    "cost_center_name": "ISUSZU Pick UP BA19CH7649",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT036",
+    "cost_center_name": "Scarpio Bst.01-027CHA6574",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT038",
+    "cost_center_name": "TRIPPER",
+    "account_code": "E01020203",
+    "account_name": "Slag Crusher other Exp"
+  },
+  {
+    "cost_center_code": "OT039",
+    "cost_center_name": "Scrap Unit",
+    "account_code": "E01020105",
+    "account_name": "Scrap Expenses"
+  },
+  {
+    "cost_center_code": "OT040",
+    "cost_center_name": "Sub Station",
+    "account_code": "E0104010101",
+    "account_name": "Repairs & Maintenance Electric Exp"
+  },
+  {
+    "cost_center_code": "OT041",
+    "cost_center_name": "Slag Crusher Unit",
+    "account_code": "E01020203",
+    "account_name": "Slag Crusher other Exp"
+  },
+  {
+    "cost_center_code": "OT042",
+    "cost_center_name": "Sales & Dispatch",
+    "account_code": "E020123",
+    "account_name": "Printing & Stationery"
+  },
+  {
+    "cost_center_code": "OT043",
+    "cost_center_name": "WorkShop -General",
+    "account_code": "E0201320404",
+    "account_name": "Repair Maintainance Melting -Pool D"
+  },
+  {
+    "cost_center_code": "OT044",
+    "cost_center_name": "Store",
+    "account_code": "E020123",
+    "account_name": "Printing & Stationery"
+  },
+  {
+    "cost_center_code": "OT045",
+    "cost_center_name": "Torkari Banding unit",
+    "account_code": "E01030103",
+    "account_name": "Packing & Bundling Expenses"
+  },
+  {
+    "cost_center_code": "OT046",
+    "cost_center_name": "Temple",
+    "account_code": "E020121",
+    "account_name": "Pooja Expenses"
+  },
+  {
+    "cost_center_code": "OT047",
+    "cost_center_name": "IT",
+    "account_code": "E020142",
+    "account_name": "IT Expenses"
+  },
+  {
+    "cost_center_code": "OT048",
+    "cost_center_name": "Business Promotion & Advertise",
+    "account_code": "E020308",
+    "account_name": "Promotional Expenses"
+  },
+  {
+    "cost_center_code": "OT049",
+    "cost_center_name": "Cooling Tower",
+    "account_code": "E0201320404",
+    "account_name": "Repair Maintainance Melting -Pool D"
+  },
+  {
+    "cost_center_code": "OT050",
+    "cost_center_name": "Medicare",
+    "account_code": "E020145",
+    "account_name": "Medical Expense"
+  },
+  {
+    "cost_center_code": "OT051",
+    "cost_center_name": "ROLLING ELECTRICAL",
+    "account_code": "E0201320405",
+    "account_name": "Repair Maintainance Rolling -pool D"
+  },
+  {
+    "cost_center_code": "OT052",
+    "cost_center_name": "ROLLING MILL EQUIPMENT",
+    "account_code": "A0101010404",
+    "account_name": "Rolling Millls Equipment"
+  },
+  {
+    "cost_center_code": "OT053",
+    "cost_center_name": "Melting",
+    "account_code": "E01020108",
+    "account_name": "Mechanical Repair Melting"
+  },
+  {
+    "cost_center_code": "OT054",
+    "cost_center_name": "SMS MELTING CONSUMABLE",
+    "account_code": "E01020101",
+    "account_name": "Consumables-Melting"
+  },
+  {
+    "cost_center_code": "OT055",
+    "cost_center_name": "Reheating",
+    "account_code": "E0201320406",
+    "account_name": "Repair Maintainance ReHeating -pool D"
+  },
+  {
+    "cost_center_code": "OT056",
+    "cost_center_name": "Shiva Infra Solution",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT057",
+    "cost_center_name": "Sudip Nirman Sewa",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT058",
+    "cost_center_name": "Aashiyan Engineering Workshop",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT059",
+    "cost_center_name": "BA20CHA 1189",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT060",
+    "cost_center_name": "SIMPLE ENERGY –SOLAR WORK",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT061",
+    "cost_center_name": "SP Machine",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT062",
+    "cost_center_name": "CIVIL",
+    "account_code": "E0201320101",
+    "account_name": "Rep Maint Exp-Pool A"
+  },
+  {
+    "cost_center_code": "OT071",
+    "cost_center_name": "Sharif Enterprises",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT072",
+    "cost_center_name": "Aashiyan Engineering Workshop",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT073",
+    "cost_center_name": "Jafraj Construction",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT074",
+    "cost_center_name": "JC Builder Pvt. Ltd.",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT075",
+    "cost_center_name": "Pawan Construction",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT076",
+    "cost_center_name": "Simplify I.T. Solutions P.LTD",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT077",
+    "cost_center_name": "Sudip Nirman Sewa",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT078",
+    "cost_center_name": "Sunita Construction Co.",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT079",
+    "cost_center_name": "Tan-Arc",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT080",
+    "cost_center_name": "Tuscon Engineers Private L.",
+    "account_code": "A0205020903",
+    "account_name": "Advance to contractor (material issued)"
+  },
+  {
+    "cost_center_code": "OT081",
+    "cost_center_name": "CIVIL Repair & maintainance",
+    "account_code": "E0201320101",
+    "account_name": "Rep Maint Exp-Pool A"
+  },
+  {
+    "cost_center_code": "OT082",
+    "cost_center_name": "CWIP",
+    "account_code": "A0101030101",
+    "account_name": "CWIP ( Assets Name)"
+  },
+  {
+    "cost_center_code": "OT083",
+    "cost_center_name": "Employee fuel  expence",
+    "account_code": "E020131",
+    "account_name": "Vehicle Running Expenses"
+  },
+  {
+    "cost_center_code": "OT089",
+    "cost_center_name": "SMS Plant Expansion",
+    "account_code": "A0101030104",
+    "account_name": "CWIP ( SMS Plant shed Expansion)"
+  },
+  {
+    "cost_center_code": "OT090",
+    "cost_center_name": "CWIP (New Furness Instalation)",
+    "account_code": "A0101030102",
+    "account_name": "CWIP (New Furness Instalation)"
+  },
+  {
+    "cost_center_code": "OT091",
+    "cost_center_name": "CWIP (Reheating Furnes Instal)",
+    "account_code": "A0101030103",
+    "account_name": "CWIP (Reheating Furness Instalation)"
+  }
+]

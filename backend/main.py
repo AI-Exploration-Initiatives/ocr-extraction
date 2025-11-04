@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .api.routers import classification_router, extraction_router, prompt_router
+from .api.routers import classification_router, extraction_router, prompt_router, mapping_router, sap_invoice_router
 recent_filename = None
 
 app = FastAPI()
@@ -23,5 +23,7 @@ async def get_home(request: Request):
 app.include_router(extraction_router.router)
 app.include_router(classification_router.router)
 app.include_router(prompt_router.router)
-    
+app.include_router(mapping_router.router)
+app.include_router(sap_invoice_router.router)
+
 

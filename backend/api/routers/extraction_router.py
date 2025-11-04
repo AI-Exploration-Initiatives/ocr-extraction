@@ -1,5 +1,5 @@
 from fastapi import Request, UploadFile, Form, APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import os
 import shutil
 from backend.services.ocr_processor import OCR_Processor
@@ -7,6 +7,9 @@ from datetime import datetime
 from backend.database import collection
 import logging
 from bson import ObjectId
+import pandas as pd
+import tempfile
+from backend.core.config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,9 +27,11 @@ def format_datetime(dt):
     """Format datetime to a readable string"""
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
+
 @router.post("/", summary = "Upload and extract text from files", description="Upload up to 5 PDF files and optionally provide a custom prompt for text extraction. The extracted text and structured content will be returned in the response.")
-async def upload_file(request: Request, file_list: list[UploadFile], prompt: str = Form(None) ):
+async def upload_file(request: Request, file_list: list[UploadFile], prompt: str = Form(None)):
     try:
+        save_as_excel = False
         # Limit uploads to maximum 5 files
         if len(file_list) > 5:
             logger.error(f"Upload attempt with {len(file_list)} files, exceeding the limit (5).")
@@ -76,6 +81,7 @@ async def upload_file(request: Request, file_list: list[UploadFile], prompt: str
             if result.status == "success":
                 document = collection.find_one({"_id": ObjectId(inserted_doc.inserted_id)})
                 document_id = document["uid"]
+                save_as_excel = True
 
                 uploads.append({
                     "file_name": file.filename,
@@ -92,15 +98,33 @@ async def upload_file(request: Request, file_list: list[UploadFile], prompt: str
                         "message": result.message
                     }
                 )
+            
+            # if save_as_excel:
+            #     try:
+            #         excel_data = []
+            #         doc = collection.find_one({"_id": ObjectId(inserted_doc.inserted_id)})
+            #         if doc:
+
+                
 
         return JSONResponse(
-            status_code=200,
+                    status_code=200,
+                    content={
+                        "status": "success",
+                        "message": "Text extracted and structured successfully",
+                        "data": uploads
+                    }
+                )   
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
             content={
-                "status": "success",
-                "message": "Text extracted and structured successfully",
-                "data": uploads
+                "status": "error",
+                "message": str(e)
             }
-        )   
+        )
+        # Prepare response
 
     except Exception as e:
         return JSONResponse(
@@ -138,7 +162,6 @@ async def delete_extraction(file: str):
         if not file.endswith('.pdf'):
             filename = f"{file}.pdf"
         result = collection.delete_one({"file_name": filename})
-        total_uploads = collection.count_documents({"file_name": {"$exists":True}})
         if result.deleted_count == 0:
             return JSONResponse(
                 status_code=404,
@@ -154,4 +177,23 @@ async def delete_extraction(file: str):
             content={"message": f"Error deleting file: {str(e)}"}
         )
 
-    
+# @router.get("/sap_fields")
+# async def get_sap_fields():
+#     # base_url = settings.SAP["BASE_URL"]
+#     try:
+#         base_url = "https://202.79.47.181:50000/b1s/v1/"
+#         if login(base_url):
+#             print("Login successful.")
+#             save_items_to_csv(base_url)
+#             save_item_groups_to_csv(base_url)
+#             save_uom_groups_to_csv(base_url)
+#             print("Data extraction completed.")
+#             return JSONResponse(
+#                 status_code=200,
+#                 content={"message": "SAP fields extracted and saved to CSV files successfully."}
+#             )
+#     except Exception as e:
+#         return JSONResponse(
+#             status_code=500,
+#             content={"message": f"Error extracting SAP fields: {str(e)}"}
+#         )

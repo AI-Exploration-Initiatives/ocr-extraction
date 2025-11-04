@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     MISTRAL_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
     HF_API_KEY: str = ""
+    BASE_URL: str = ""
+    COMPANY_DB: str = ""
+    USERNAME: str = ""
+    PASSWORD: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

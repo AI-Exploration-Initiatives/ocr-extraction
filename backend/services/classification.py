@@ -155,9 +155,9 @@ class Classifier:
             headers = {
                 "Authorization": f"Bearer {access_token}",
             }
-            df = pd.read_csv("backend/assets/sap_fields.csv")
+            df = pd.read_csv("backend/assets/vendor_list.csv")
             logger.info("Loaded vendor names from CSV.")
-            sap_fields = df.values.tolist()
+            vendor_names = df.values.tolist()
 
             def query(payload):
                 response = requests.post(API_URL, headers=headers, json=payload)
@@ -165,7 +165,7 @@ class Classifier:
             
             document = collection.find_one({"uid": document_id}, {"extracted_details": 1, "_id": 0})
             vendor_name = document.get("extracted_details", {}).get("vendor_details", {}).get("name")
-            vendor_name_list = [list[0] for list in sap_fields]
+            vendor_name_list = [list[0] for list in vendor_names]
 
             output = query({
                 "inputs": {

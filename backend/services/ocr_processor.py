@@ -6,6 +6,9 @@ from ..models import OCRResponse
 from ..database import  add_default_prompt
 from ..core.config import settings
 import logging
+# from google import genai 
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,8 +37,11 @@ class OCR_Processor:
             logger.critical("MISTRAL_API_KEY is not set or is empty in environment variables")
             raise ValueError("MISTRAL_API_KEY is not set or is empty in environment variables")
         self.client = Mistral(api_key=api_key)
-        self.model = "mistral-large-latest"
-        logger.info(f"OCR_Processor initialized with model: {self.model}") 
+        self.ocr_model = "mistral-ocr-latest"
+        # self.gemini_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(temperature=0, model="gemini-2.5-flash", api_key=settings.GOOGLE_API_KEY, max_tokens=None, timeout=None, max_retries=2)
+        self.model = "mistral-small-latest"
+        logger.info(f"OCR_Processor initialized with model: {self.ocr_model} {self.llm.model}") 
 
     def extract_raw_text_from_pdf(self, file_path):
         """Uploads the PDF and extracts raw text using Mistral."""
@@ -46,6 +52,7 @@ class OCR_Processor:
         try:
             with open(file_path, "rb") as f:
                 uploaded_pdf = self.client.files.upload(
+
                     file={
                         "file_name": os.path.basename(file_path),
                         "content": f,
@@ -56,30 +63,43 @@ class OCR_Processor:
             logger.info(f"Successfully uploaded {uploaded_pdf.filename} for OCR processing")
 
             signed_url = self.client.files.get_signed_url(file_id=uploaded_pdf.id)
-
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "You are an intelligent document parser, and your role is to extract the text from the PDF below as you read naturally. Do not hallucinate."
-                        },
-                        {
-                            "type": "document_url",
-                            "document_url": signed_url.url
-                        }
-                    ]
-                }
-            ]
-
-            chat_response = self.client.chat.complete(
-                model= self.model,
-                messages=messages
+            
+            ocr_response = self.client.ocr.process(
+                model = self.ocr_model,
+                document = {
+                    "type": "document_url",
+                    "document_url": signed_url.url
+                },
+                include_image_base64 = True
             )
+
+            # messages = [
+            #     {
+            #         "role": "user",
+            #         "content": [
+            #             {
+            #                 "type": "text",
+            #                 "text": "You are an intelligent document parser, and your role is to extract the text from the PDF below as you read naturally. Do not hallucinate."
+            #             },
+            #             {
+            #                 "type": "document_url",
+            #                 "document_url": signed_url.url
+            #             }
+            #         ]
+            #     }
+            # ]
+
+            # chat_response = self.client.chat.complete(
+            #     model= self.model,
+            #     messages=messages
+            # )
+
             logger.info("Extracted text from PDF using OCR model")
 
-            return chat_response.choices[0].message.content
+            # return chat_response.choices[0].message.content
+            # print(ocr_response.pages[0].markdown)
+            return ocr_response.pages[0].markdown
+
         except Exception as e:
             logger.error(f"Error during PDF text extraction: {e}")
             raise
@@ -106,12 +126,13 @@ class OCR_Processor:
                         - line_items (list): hs_code, description, qty, rate, amount
                             Rules:
                                 1. Extract only the fields listed; do not guess or add extra fields.
-                                2. If a field is missing, set its value as null.
+                                2. If a field is missing, set its value as "".
                                 3. Use context ('Vendor', 'Supplier', 'Bill To', 'Customer', etc.) to distinguish parties. If unclear, the first business is Vendor,                        the second is Customer.
                                 4. Each line_item must include hs_code and description; qty, rate, and amount are optional.
                                 5. Always return the result strictly in the following JSON structure.
                                 6. PAN numbers are typically boxed or near labels like 'PAN No.', and follow a 9-digit (Nepal) format.
-                                7. Return  JSON without any markdown formatting or code blocks.
+                                7. For Dates put - between year, month and day like YYYY-MM-DD.
+                                8. Return  JSON without any markdown formatting or code blocks.
 
                                 Return the standard structured JSON format shown below:
                                 {{
@@ -132,6 +153,7 @@ class OCR_Processor:
                                     "invoice_details": {{
                                         "bill_number": "",
                                         "bill_date": "",
+                                        "nepali_miti": "", // This is the date in nepali calendar if available
                                         "mode_of_payment": "",
                                         "finance_manager": "",
                                         "authorized_signatory": "",
@@ -169,39 +191,111 @@ class OCR_Processor:
                     "content": prompt_template
                 }
             ]
+            
+            output = self.llm.invoke(prompt_template)  
 
-            chat_response = self.client.chat.complete(
-                model=self.model,
-                messages=messages,
-            )
-            output = chat_response.choices[0].message.content
+            # chat_response = self.gemini_client.models.generate_content(
+            #     model="gemini-2.5-flash",
+            #     contents=prompt_template,
+            #     config = {
+            #         "response_mime_type": "application/json",
+            #     }
+            # )
+            # # output = chat_response.choices[0].message.content
+            # output = chat_response.text
+
             logger.info("Extracted vendor details using OCR model")
 
-            return output
+            # return json.loads(output)
+            return output.content
+            
         except Exception as e:
             logger.error(f"Error during vendor details extraction: {e}")
             raise
 
     def process_file(self, file_path, user_prompt="") -> OCRResponse:
         try:
+            # Validate file path
+            if not file_path or not file_path.strip():
+                logger.error("Empty file path provided")
+                return OCRResponse(
+                    status="error",
+                    message="Empty file path provided",
+                    content={},
+                    extracted_text=""
+                )
+
             if file_path.endswith(('.pdf', '.PDF')):
                 text = self.extract_raw_text_from_pdf(file_path)
+                
+                # Validate extracted text
+                if not text or not text.strip():
+                    logger.error("No text extracted from PDF")
+                    return OCRResponse(
+                        status="error",
+                        message="No text could be extracted from the PDF",
+                        content={},
+                        extracted_text=""
+                    )
             else:
                 logger.error("Unsupported file type. Only PDF files are supported.")
-                return OCRResponse(status="failed", message="Unsupported file type")
+                return OCRResponse(
+                    status="error",
+                    message="Unsupported file type. Only PDF files are supported.",
+                    content={},
+                    extracted_text=""
+                )
             
             result = self.extract_vendor_details(text, user_prompt)
+            
+            # Validate result before processing
+            if not result or not result.strip():
+                logger.error("Empty result from vendor details extraction")
+                return OCRResponse(
+                    status="error",
+                    message="Model returned empty response for data extraction",
+                    content={},
+                    extracted_text=text
+                )
 
             if isinstance(result, str):
                 try:
-                    result = json.loads(result)  # convert JSON string to dict
+                    # Clean the result before parsing
+                    cleaned_result = result.strip()
+                    
+                    # Remove markdown formatting if present
+                    if cleaned_result.startswith("```json"):
+                        cleaned_result = cleaned_result[7:]
+                    elif cleaned_result.startswith("```"):
+                        cleaned_result = cleaned_result[3:]
+                    
+                    if cleaned_result.endswith("```"):
+                        cleaned_result = cleaned_result[:-3]
+                    
+                    cleaned_result = cleaned_result.strip()
+                    
+                    # Final check for empty result
+                    if not cleaned_result:
+                        logger.error("Result is empty after cleaning")
+                        return OCRResponse(
+                            status="error",
+                            message="Empty response from model after cleaning",
+                            content={"raw_response": result},
+                            extracted_text=text
+                        )
+                    
+                    result = json.loads(cleaned_result)
                     logger.info("Successfully parsed JSON response from model")
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON parsing error: {e}")
+                    logger.error(f"Raw result: {repr(result)}")
                     return OCRResponse(
                         status="error",
                         message=f"Failed to parse JSON from result: {e}",
-                        content={},
+                        content={
+                            "raw_response": result,
+                            "cleaned_response": cleaned_result if 'cleaned_result' in locals() else result
+                        },
                         extracted_text=text
                     )
                 
@@ -211,6 +305,23 @@ class OCR_Processor:
                 content=result,
                 extracted_text=text
             )
+            
+        except FileNotFoundError as e:
+            logger.error(f"File not found: {e}")
+            return OCRResponse(
+                status="error",
+                message=f"File not found: {str(e)}",
+                content={},
+                extracted_text=""
+            )
         except Exception as e:
-            logger.error(f"Error during file processing: {e}")
+            logger.error(f"Unexpected error during file processing: {e}")
+            return OCRResponse(
+                status="error",
+                message=f"Unexpected error during file processing: {str(e)}",
+                content={},
+                extracted_text=""
+            )
+
+
 
