@@ -39,7 +39,7 @@ class OCR_Processor:
         self.client = Mistral(api_key=api_key)
         self.ocr_model = "mistral-ocr-latest"
         # self.gemini_client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        self.llm = ChatGoogleGenerativeAI(temperature=0, model="gemini-2.5-flash", api_key=settings.GOOGLE_API_KEY, max_tokens=None, timeout=None, max_retries=2)
+        self.llm = ChatGoogleGenerativeAI(temperature=0, model="gemini-2.5-flash-lite", api_key=settings.GOOGLE_API_KEY, max_tokens=None, timeout=None, max_retries=2)
         self.model = "mistral-small-latest"
         logger.info(f"OCR_Processor initialized with model: {self.ocr_model} {self.llm.model}") 
 
@@ -131,7 +131,7 @@ class OCR_Processor:
                                 4. Each line_item must include hs_code and description; qty, rate, and amount are optional.
                                 5. Always return the result strictly in the following JSON structure.
                                 6. PAN numbers are typically boxed or near labels like 'PAN No.', and follow a 9-digit (Nepal) format.
-                                7. For Dates put - between year, month and day like YYYY-MM-DD.
+                                7. For Dates put - between year, month and day like YYYY-MM-DD, if the date exceeds 2080 then convert the following Bikram Sambat (BS) date to the Gregorian (AD) calendar.
                                 8. Return  JSON without any markdown formatting or code blocks.
 
                                 Return the standard structured JSON format shown below:

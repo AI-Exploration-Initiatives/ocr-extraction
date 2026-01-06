@@ -1,7 +1,7 @@
 header file,,
 Document name,Table name,sap field name
-Name,opch,CardName
-code, opch, CardCode
+Vendor Name,opch,CardName
+Vendor Code, opch, CardCode
 vendor ref. no,opch,NumAtCard
 transaction type,opch,GSTTranTyp
 no.,opch,Series
@@ -22,7 +22,7 @@ tax code,PCH1,TaxCode
 wtax liable,PCH1,WtLiable
 whse,PCH1,WhsCode
 g/l account,PCH1,AcctCode
-uom code,PCH1,UomEntry
+uom code,PCH1,UoMEntry
 costing code,OPRC, CostingCode
 accountCode, OACT, AccountCode
 location,PCH1,LocCode
