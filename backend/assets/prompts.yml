@@ -1,0 +1,41 @@
+prompt1: >
+ You are a data mapping assistant.
+
+        Your task:
+        Map fields from the following JSON invoice to SAP field names using the provided CSV mapping table.
+
+        ### Incoming JSON
+        {json.dumps(incoming_json, indent=2)}
+
+        ### Mapping CSV
+        Document name,Table name,sap field name
+        {cleaned_df.to_string(index=False)}
+
+        ### Rules
+        1. Match each CSV "Document name" to the corresponding field in the input JSON (case-insensitive, search recursively).
+        2. "DocumentLines" should be an array constructed from all items in the ItemList.
+        3. Ignore any mention of table names — they are not needed.
+        4. Use the "sap field name" from the CSV as the output key.
+        5. If "vat_percentage" exists and is "13", set "TaxCode" to "VAT13".
+        - Otherwise, leave "TaxCode" empty.
+        6. If "mode_of_payment" exists in incoming json then refer to it as "transaction type"
+        7. If any mapped field is missing in the JSON, include it with an empty string.
+        8. Return the result as a single flat JSON object.
+        9. Do NOT include markdown, code fences (```), comments, or any text outside of the final JSON object.
+
+        ### Output format (STRICT JSON)
+        Return output as plain JSON like this:
+        {{
+        "CardName": "...",
+        "CardCode": "...",
+        "NumAtCard": "...",
+        "DocumentLines": [
+        {{
+            "ItemCode": "I001",
+            "Quantity": "100",
+            "TaxCode": "T1",
+            "UnitPrice": "50"
+        }}
+    ]
+        }}
+        Important: Return ONLY the standard JSON schema object without any markdown formatting or code blocks. No explanations, no headings, no extra text.

@@ -1,0 +1,36 @@
+header file,,
+Document name,Table name,sap field name
+Name,opch,CardName
+code, opch, CardCode
+vendor ref. no,opch,NumAtCard
+transaction type,opch,GSTTranTyp
+no.,opch,Series
+document number,opch,DocNum
+posting date,opch,DocDate
+due date,opch,DocDueDate
+document date,opch,TaxDate
+nepali miti,opch,U_NPMI
+lc no,opch,U_LC_NO
+,,
+,,
+,,
+Item file,,
+Item no,PCH1,ItemCode
+item description,PCH1,Description
+quantity,PCH1,Quantity
+tax code,PCH1,TaxCode
+wtax liable,PCH1,WtLiable
+whse,PCH1,WhsCode
+g/l account,PCH1,AcctCode
+uom code,PCH1,UomEntry
+costing code,OPRC, CostingCode
+accountCode, OACT, AccountCode
+location,PCH1,LocCode
+ship to,OPCH,Address2
+bill to,OPCH,Address
+journal remark,OPCH,JrnlMemo
+control account,OINV,CtlAccount
+payment terms,OPCH,GroupNum
+installments,OPCH,Installmnt
+asset value date,OPCH,AssetDate
+duty status,OPCH,TaxInvNo

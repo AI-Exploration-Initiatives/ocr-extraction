@@ -1,10 +1,11 @@
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from .core.config import settings
 
 load_dotenv()
 
-mongodb_uri = os.getenv("MONGODB_URI")
+mongodb_uri = settings.MONGODB_URI
 
 client = MongoClient(mongodb_uri)
 db = client["ocr_prompts"]
