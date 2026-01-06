@@ -65,13 +65,21 @@ jobs:
             --max-instances 10 \
             --port 8080
 
-      - name: Notify Discord
-        run: |
-          chmod +x ./notify_discord.sh
-          ./notify_discord.sh
+      - name: Send deployment notification
+        if: always()
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GITHUB_TOKEN: ${{ github.token }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          REPO_NAME: ${{ github.event.repository.name }}
-          COMMIT_SHA: ${{ github.sha }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS="✅ Success"
+            COLOR="3066993"
+            DESCRIPTION="Deployment completed successfully!"
+          else
+            STATUS="❌ Failed"
+            COLOR="15158332"
+            DESCRIPTION="Deployment failed. Check logs for details."
+          fi
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          curl -H "Content-Type: application/json" \
+            -d "{\"embeds\": [{\"title\": \"🚀 Deployment Notification\",\"description\": \"Status: $STATUS\\nBranch: ${{ github.ref_name }}\\nMessage: $DESCRIPTION\",\"color\": $COLOR,\"fields\": [{\"name\": \"📦 Repository\",\"value\": \"[${{ github.repository }}](https://github.com/${{ github.repository }})\",\"inline\": true},{\"name\": \"👤 Triggered by\",\"value\": \"${{ github.actor }}\",\"inline\": true},{\"name\": \"🔗 Commit\",\"value\": \"[\`${GITHUB_SHA:0:7}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})\",\"inline\": true},{\"name\": \"📝 Commit Message\",\"value\": \"${{ github.event.head_commit.message }}\",\"inline\": false}],\"timestamp\": \"$TIMESTAMP\",\"footer\": {\"text\": \"OCR Extraction CI/CD\"}}]}" \
+            $DISCORD_WEBHOOK
