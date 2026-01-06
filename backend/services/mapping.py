@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from pandas.errors import EmptyDataError
 from backend.database import collection
 from fastapi import HTTPException
 import logging
@@ -29,35 +30,39 @@ class Mapper:
         self.sap_client = SAPClient()
         self.gemini_client = genai.Client(api_key=settings.GOOGLE_API_KEY)
         self.sap_client.save_items_to_csv()
-
+        self.sap_client.save_item_groups_to_csv()
+        self.sap_client.save_business_partners()
+        self.sap_client.save_uom_groups_to_csv()
+        
         try:
             self.vendor_names_with_codes = pd.read_csv('backend/assets/vendor_list.csv')
-        except FileNotFoundError:
-            logger.error("Warning: 'vendor_list.csv' not found. Vendor code validation will be disabled.")
+        except (FileNotFoundError, EmptyDataError):
+            logger.error("Warning: 'vendor_list.csv' not found or empty. Vendor code validation will be disabled.")
             self.vendor_names_with_codes = None
 
         try:
             self.item_list_df = pd.read_csv('backend/assets/item_list.csv')
             self.item_names_list = self.item_list_df["ItemName"].str.lower().dropna().to_list()
             logger.info("Successfully loaded item_list.csv for product mapping.")
-        except FileNotFoundError:
-            logger.error("Warning: 'item_list.csv' not found. Item code mapping will be disabled.")
-            self.item_names_df = None
+        except (FileNotFoundError, EmptyDataError):
+            logger.error("Warning: 'item_list.csv' not found or empty. Item code mapping will be disabled.")
+            self.item_list_df = None
+            self.item_names_list = None
 
         try:
             item_groups_df = pd.read_csv('backend/assets/item_groups.csv')
             self.item_groups_string = item_groups_df.to_dict(orient='records')
             logger.info("Successfully loaded item_groups.csv for product group mapping.")
-        except FileNotFoundError:
-            logger.error("Warning: 'item_groups.csv' not found. Item group mapping will be disabled.")
+        except (FileNotFoundError, EmptyDataError):
+            logger.error("Warning: 'item_groups.csv' not found or empty. Item group mapping will be disabled.")
             self.item_groups_string = None
 
         try:
             uom_groups_df = pd.read_csv('backend/assets/uom_groups.csv')
             self.uom_groups_string = uom_groups_df.to_dict(orient='records')
             logger.info("Successfully loaded uom_groups.csv for UoM group mapping.")
-        except FileNotFoundError:
-            logger.error("Warning: 'uom_groups.csv' not found. UoM group mapping will be disabled.")
+        except (FileNotFoundError, EmptyDataError):
+            logger.error("Warning: 'uom_groups.csv' not found or empty. UoM group mapping will be disabled.")
             self.uom_groups_string = None
 
         try:
@@ -70,13 +75,15 @@ class Mapper:
             account_codes_df = pd.read_csv('backend/assets/account_codes.csv')
             self.account_codes_string = account_codes_df.to_dict(orient='records')
             logger.info("Successfully loaded account_codes.csv for account code mapping.")
-        except FileNotFoundError:
-            logger.error("Warning: 'account_codes.csv' not found. Account code mapping will be disabled.")
+        except (FileNotFoundError, EmptyDataError):
+            logger.error("Warning: 'account_codes.csv' not found or empty. Account code mapping will be disabled.")
             self.account_codes_string = None
 
 
     def find_similar_vendor(self, document_uid: int, threshold: int = 80):
         try:
+            self.sap_client.save_business_partners()
+            
             document_json = collection.find_one({"uid": document_uid}, {"_id": 0, "extracted_details": 1})
             if not document_json:
                 raise HTTPException(status_code=404, detail=f"Document with UID {document_uid} not found.")
@@ -86,7 +93,7 @@ class Mapper:
 
             incoming_vendor_name = incoming_json_for_code['vendor_details']['name']
 
-            vendor_names_list = self.vendor_names_with_codes["Vendor name"].str.lower().dropna().tolist()
+            vendor_names_list = self.vendor_names_with_codes["CardName"].str.lower().dropna().tolist()
             # vendor_names = [name[0] for name in vendor_names_list]
             logger.info("Starting vendor name matching process.")
 
@@ -101,9 +108,9 @@ class Mapper:
                 matched_vendor_name = best_match[0]
                 similarity_score = best_match[1]
 
-                vendor_row = self.vendor_names_with_codes[self.vendor_names_with_codes["Vendor name"].str.lower() == matched_vendor_name]
+                vendor_row = self.vendor_names_with_codes[self.vendor_names_with_codes["CardName"].str.lower() == matched_vendor_name]
                 if not vendor_row.empty:
-                    vendor_code = vendor_row.iloc[0]['Vendor id']
+                    vendor_code = vendor_row.iloc[0]['CardCode']
                     collection.update_one(
                         {"uid": document_uid},
                         {"$set": {"extracted_details.vendor_details.code": vendor_code}}
@@ -117,6 +124,7 @@ class Mapper:
             logger.error(f"Error in find_similar_vendor: {e}")
 
     def map_items_to_codes(self, document_uid: int):
+        self.sap_client.save_item_groups_to_csv()
 
         if self.item_list_df is None:
             logger.warning("Item list CSV not loaded. Skipping item code mapping.")
@@ -192,7 +200,7 @@ class Mapper:
         try:
             logger.info(f"No item found. Creating new item for description: {item_description}")
             response = self.gemini_client.models.generate_content(
-                model='gemini-2.0-flash-lite',
+                model='gemini-2.5-flash-lite',
                 contents=f"""
                     You are given:
                     1. An item description: "{item_description}"
@@ -235,7 +243,7 @@ class Mapper:
     def map_costing_code(self, item_name: str):
         try:
             response = self.gemini_client.models.generate_content(
-                model='gemini-2.0-flash-lite',
+                model='gemini-2.5-flash-lite',
                 contents=f"""I have a list of cost_center_code, const_center_name, account_code, account_name: {json.dumps(self.costing_code)}. Please map the item name '{item_name}' to the appropriate cost_center_code and account code from the provided cost_center_name and account_name. Make references close as much as you can. Generate a JSON object with the item name and the corresponding cost_center_code and account_code. Give me in a plain json object without any markdown format. Do not hallucinate.
                 Example:
                 {
@@ -262,7 +270,7 @@ class Mapper:
     def map_account_codes(self, item_name:str):
         try:
             response = self.gemini_client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                model="gemini-2.5-flash-lite",
                 contents=f"""
                     You are given a list of account records containing 'AccountCode' and 'Name' fields:
                     {self.account_codes_string}

@@ -45,6 +45,8 @@ class SAPClient:
                 print(f"Login request failed: {e}")
                 exit(1)
 
+        self.save_item_groups_to_csv()
+        
     def save_items_to_csv(self):
         all_items = []
         item_url_req = f'{self.base_url}Items/?$select=ItemCode,ItemName,UoMGroupEntry,InventoryUoMEntry'
@@ -212,6 +214,42 @@ class SAPClient:
 
         return cost_code_df
     
+    def save_business_partners(self):
+        bp_list = []
+        bp_url = f"{self.base_url}BusinessPartners?$select=CardCode,CardName,CardType&$orderby=CardName"
+
+        while bp_url:
+            try:
+                response = self.session.get(bp_url, verify=False)
+                logger.info("Fetching business partners from SAP...")
+
+                if 'value' in response.json():
+                    bp_values = response.json()['value']
+                    for num in bp_values:
+                        bp_list.append({
+                            "CardCode": num["CardCode"],
+                            "CardName": num["CardName"]
+                        })
+
+                    if 'odata.nextLink' in response.json():
+                        logger.info("Fetching next page of business partners...")
+                        next_link = response.json()['odata.nextLink']
+                        bp_url = f"{self.base_url}{next_link}"
+                    else:
+                        break
+                else:
+                    break
+
+            except Exception as e:
+                logger.error(f"Error fetching business partners: {e}")
+                raise
+        bp_df = pd.DataFrame(bp_list)
+        bp_df.dropna(inplace=True)
+        bp_df.to_csv('backend/assets/vendor_list.csv', index=False)
+        logger.info("Business partners saved as csv")
+
+        return bp_df
+    
     def post_items_to_sap(self, item: dict):
         try:
             logger.info(f"Posting item to SAP: {item}")
@@ -228,6 +266,8 @@ class SAPClient:
                 return None
         except Exception as e:
             logger.error(f"Error posting item: {e}")
+        finally:
+            self.save_items_to_csv()
 
     def post_purchase_invoice(self, invoice: dict):
         try:
@@ -237,8 +277,15 @@ class SAPClient:
                 logger.info("Successfully posted purchase invoice to SAP.")
                 return response.json()
             else:
-                logger.error("Failed to post purchase invoice.")
-                return None
+                error_detail = response.text
+                try:
+                    error_json = response.json()
+                    error_detail = error_json.get("error", {}).get("message", {}).get("value", response.text)
+                except:
+                    pass
+                logger.error(f"Failed to post purchase invoice. Status: {response.status_code}, Error: {error_detail}")
+                return {"error": True, "status_code": response.status_code, "detail": error_detail}
         except Exception as e:
             logger.error(f"Error posting purchase invoice: {e}")
+            return {"error": True, "detail": str(e)}
 

@@ -7,11 +7,22 @@ import json
 import google.generativeai as genai
 from backend.core.config import settings
 from backend.services.mapping import Mapper
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/mapping", tags=["Field Mapping"])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+class DocumentLine(BaseModel):
+    ItemCode: str
+    TaxCode: str
+    UoMEntry: int
+
+class SAPFields(BaseModel):
+    CardCode: str
+    DocDate: str
+    DocumentLines: list[DocumentLine]
 
 try:
     sap_required_fields_df = pd.read_csv('backend/assets/sap invoice required field details.csv')
@@ -25,7 +36,7 @@ try:
     if not settings.GOOGLE_API_KEY:
         raise ValueError("GOOGLE_API_KEY is not set in the environment.")
     genai.configure(api_key=settings.GOOGLE_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
     logger.info("Successfully configured Gemini client with model 'gemini-2.0-flash'.")
 except Exception as e:
     logger.error(f"FATAL: Failed to configure Gemini client: {e}")
@@ -68,7 +79,7 @@ async def get_field_mappings(document_uid: int):
         {cleaned_df.to_string(index=False)}
 
         ### Rules
-        1. Match each CSV "Document name" to the corresponding field in the input JSON (case-insensitive, search recursively).
+        1. Match each CSV "Document name" to the corresponding "sap field name" in the input JSON (case-insensitive, search recursively).
         2. "DocumentLines" should be an array constructed from all items in the line_items.
         3. For each item in line_items:
            - If "ItemCode" exists in the line item, use it directly
