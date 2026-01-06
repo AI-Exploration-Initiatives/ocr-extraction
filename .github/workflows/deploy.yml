@@ -79,7 +79,43 @@ jobs:
             COLOR="15158332"
             DESCRIPTION="Deployment failed. Check logs for details."
           fi
+          
+          COMMIT_MSG=$(echo '${{ github.event.head_commit.message }}' | sed 's/"/\\"/g' | sed 's/\n/ /g' | head -c 200)
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
           curl -H "Content-Type: application/json" \
-            -d "{\"embeds\": [{\"title\": \"🚀 Deployment Notification\",\"description\": \"Status: $STATUS\\nBranch: ${{ github.ref_name }}\\nMessage: $DESCRIPTION\",\"color\": $COLOR,\"fields\": [{\"name\": \"📦 Repository\",\"value\": \"[${{ github.repository }}](https://github.com/${{ github.repository }})\",\"inline\": true},{\"name\": \"👤 Triggered by\",\"value\": \"${{ github.actor }}\",\"inline\": true},{\"name\": \"🔗 Commit\",\"value\": \"[\`${GITHUB_SHA:0:7}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})\",\"inline\": true},{\"name\": \"📝 Commit Message\",\"value\": \"${{ github.event.head_commit.message }}\",\"inline\": false}],\"timestamp\": \"$TIMESTAMP\",\"footer\": {\"text\": \"OCR Extraction CI/CD\"}}]}" \
-            $DISCORD_WEBHOOK
+            -d @- "$DISCORD_WEBHOOK" <<EOF
+          {
+            "embeds": [{
+              "title": "🚀 Deployment Notification",
+              "description": "**Status:** $STATUS\n**Branch:** ${{ github.ref_name }}\n**Message:** $DESCRIPTION",
+              "color": $COLOR,
+              "fields": [
+                {
+                  "name": "📦 Repository",
+                  "value": "[${{ github.repository }}](https://github.com/${{ github.repository }})",
+                  "inline": true
+                },
+                {
+                  "name": "👤 Triggered by",
+                  "value": "${{ github.actor }}",
+                  "inline": true
+                },
+                {
+                  "name": "🔗 Commit",
+                  "value": "[\`${GITHUB_SHA:0:7}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})",
+                  "inline": true
+                },
+                {
+                  "name": "📝 Commit Message",
+                  "value": "$COMMIT_MSG",
+                  "inline": false
+                }
+              ],
+              "timestamp": "$TIMESTAMP",
+              "footer": {
+                "text": "OCR Extraction CI/CD"
+              }
+            }]
+          }
+          EOF
