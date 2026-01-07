@@ -9,3 +9,4 @@ __pycache__/
 *.py[cod]
 
 backend/ipynb
+backend/services/mapping.ipynb
