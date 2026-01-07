@@ -87,7 +87,7 @@ async def get_field_mappings(document_uid: int):
         4. Ignore any mention of table names — they are not needed.
         5. Use the "sap field name" from the CSV as the output key.
         6. If "vat_percentage" exists and is "13", set "TaxCode" to "VAT13".
-           - Otherwise, leave "TaxCode" empty.
+           - Otherwise, set "TaxCode" to "VAT13".
         7. If "mode_of_payment" exists in incoming json then refer to it as "transaction type"
         8. If any mapped field is missing in the JSON, include it with an empty string.
         9. Return the result as a single flat JSON object.
