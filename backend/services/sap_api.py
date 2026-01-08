@@ -216,7 +216,7 @@ class SAPClient:
     
     def save_business_partners(self):
         bp_list = []
-        bp_url = f"{self.base_url}BusinessPartners?$select=CardCode,CardName,CardType&$orderby=CardName"
+        bp_url = f"{self.base_url}BusinessPartners?$select=CardCode,CardName,CardType&$orderby=CardName&$filter=startswith(CardCode, 'V')"
 
         while bp_url:
             try:

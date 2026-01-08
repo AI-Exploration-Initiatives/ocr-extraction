@@ -13,6 +13,8 @@ class DocumentLine(BaseModel):
     ItemCode: str
     UoMEntry: int
     TaxCode: str
+    # Quantity: float
+    # UnitPrice: float
 
 class SAPPurchaseInvoice(BaseModel):
     CardCode: str
